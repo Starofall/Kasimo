@@ -1,0 +1,29 @@
+<html>
+<head>
+    <link href="style.css" rel="stylesheet">
+    <meta charset="utf-8">
+    <meta name="viewport"
+          content="user-scalable=no, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, minimal-ui">
+    <title>Animated BFS</title>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+    <script src="cytoscape.js"></script>
+    <script src="code.js"></script>
+</head>
+<body>
+<div id="cy" style="-webkit-tap-highlight-color: rgba(0,0,0,0);">
+    <div style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0); position: relative; z-index: 0; overflow: hidden; width: 1084px; height: 957px;">
+        <canvas style="user-select: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); outline-style: none; position: absolute; z-index: 3; width: 1084px; height: 957px;"
+                data-id="layer0-selectbox" width="1084" height="957"></canvas>
+        <canvas style="user-select: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); outline-style: none; position: absolute; z-index: 2; width: 1084px; height: 957px;"
+                data-id="layer1-drag" width="1084" height="957"></canvas>
+        <canvas style="user-select: none; -webkit-tap-highlight-color: rgba(0, 0, 0, 0); outline-style: none; position: absolute; z-index: 1; width: 1084px; height: 957px;"
+                data-id="layer2-node" width="1084" height="957"></canvas>
+    </div>
+</div>
+
+
+<div style="font-family: &quot;Helvetica Neue&quot;, Helvetica, sans-serif; font-style: normal; font-size: 16px; font-weight: normal; position: absolute; left: -9999px; top: -9999px; z-index: -1; visibility: hidden; pointer-events: none; padding: 0px; line-height: 1; white-space: normal;">
+    e
+</div>
+</body>
+</html>
