@@ -13,12 +13,12 @@ class TickScheduler(id: String) extends Actor with ActorLogging {
 
   var actors = List[ActorRef]()
 
-  val simInterval = 10 /* milliseconds */ * 1000 * 1000
+  val simInterval = 5 /* milliseconds */ * 1000 * 1000
   context.system.scheduler.schedule(Duration.fromNanos(Random.nextInt(simInterval)), Duration.fromNanos(simInterval)) {
     actors.foreach(_ ! SimTick())
   }
 
-  val renderInterval = 10 /* milliseconds */  * 1000 * 1000
+  val renderInterval = 15 /* milliseconds */  * 1000 * 1000
   context.system.scheduler.schedule(Duration.fromNanos(Random.nextInt(renderInterval)), Duration.fromNanos(renderInterval)) {
     actors.foreach(_ ! RenderTick())
   }

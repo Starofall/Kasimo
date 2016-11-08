@@ -31,52 +31,14 @@ $(function () { // on dom ready
             }),
 
         elements: {
-            nodes: [
-                // {data: {id: "a"}},
-                // {data: {id: "b"}},
-                // {data: {id: 'c', name: "yeah"}},
-                // {data: {id: 'd', name: "yeah"}},
-                // {data: {id: 'e', name: "yeah"}}
-            ],
-
-            edges: [
-                // {
-                //     data: {
-                //         id: 'ae',
-                //         weight: 1,
-                //         source: 'a',
-                //         target: 'e',
-                //         cars: [{pos: 0.1, id: "123"}, {pos: 0.3, id: "123"}]
-                //     }
-                // },
-                // {
-                //     data: {
-                //         id: "ab",
-                //         weight: 1,
-                //         source: "a",
-                //         target: "b"
-                //     }
-                // },
-                // {
-                //     data: {
-                //         id: "ba",
-                //         weight: 1,
-                //         source: "b",
-                //         target: "a"
-                //     }
-                // },
-                // {data: {id: 'bc', weight: 5, source: 'b', target: 'c'}},
-                // {data: {id: 'ce', weight: 6, source: 'c', target: 'e'}},
-                // {data: {id: 'cd', weight: 2, source: 'c', target: 'd'}},
-                // {data: {id: 'de', weight: 7, source: 'd', target: 'e'}}
-            ]
+            nodes: [],
+            edges: [ ]
         },
 
         layout: {
-            name: 'breadthfirst',
-            directed: true,
-            roots: '#a',
-            padding: 10
+            name: 'preset',
+            fit: true, // whether to fit to viewport
+            padding: 30
         }
     });
 
@@ -98,24 +60,37 @@ $(function () { // on dom ready
 
 
     var applyCarPositions = function (data) {
+        var n = cy.$("#" + data.nodeId)[0];
+        if(data.pos && n){
+            // console.log(data.type)
+            n.position("x",parseInt(data.pos.x))
+            n.position("y",parseInt(data.pos.y))
+            if(data.type == "GasStation()"){
+                n.addClass('highlighted');
+            }
+        }
         if (data.edges) {
             data.edges.map(function (e) {
                 var j = cy.$("#" + e.edgeId)[0];
                 if (j) {
                     j.data('cars', e.carPositions);
                 } else {
-                    if(!cy.$("#" + e.from)[0]){
-                        cy.add({group: "nodes", data: {id: e.from}});
+                    if (!cy.$("#" + e.from)[0]) {
+                        cy.add({group: "nodes", data: {
+                            id: e.from},
+                            position: {
+                                x: 100,
+                                y: 100
+                            }
+                        });
                     }
-                    if(!cy.$("#" + e.to)[0]){
+                    if (!cy.$("#" + e.to)[0]) {
                         cy.add({group: "nodes", data: {id: e.to}});
                     }
                     cy.add({group: "edges", data: {id: e.edgeId, source: e.from, target: e.to}});
                     cy.layout({
-                        name: 'breadthfirst',
-                        directed: true,
-                        roots: '#a',
-                        padding: 10
+                        name: 'preset',
+                        padding: 30
                     })
                 }
             })
@@ -123,21 +98,32 @@ $(function () { // on dom ready
 
     }
 
+    var webSocket;
 
-    applyCarPositions("ab", [{pos: 0.4, id: "123"}, {pos: 0.3, id: "123"}])
 
-    var exampleSocket = new WebSocket("ws://localhost:9898");
-    exampleSocket.onerror = function (e) {
-        console.log(e)
+    var startSocket = function () {
+        var exampleSocket = new WebSocket("ws://localhost:9898");
+        exampleSocket.onerror = function (e) {
+            console.log(e)
+            setTimeout(function () {
+                startSocket()
+            }, 2000)
+        }
+        exampleSocket.onopen = function () {
+            console.log("OPEN")
+        }
+        exampleSocket.onmessage = function (m) {
+            var msg = JSON.parse(m.data)
+            applyCarPositions(msg)
+            // console.log(msg)
+        }
+        exampleSocket.onclose = function () {
+            setTimeout(function () {
+                startSocket()
+            }, 2000)
+        }
     }
-    exampleSocket.onopen = function () {
-        console.log("OPEN")
-    }
-    exampleSocket.onmessage = function (m) {
-        var msg = JSON.parse(m.data)
-        applyCarPositions(msg)
-        // console.log(msg)
-    }
+    startSocket()
 
 
 }); // on dom ready

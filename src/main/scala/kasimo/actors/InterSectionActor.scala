@@ -1,17 +1,17 @@
 package kasimo.actors
 
 import akka.actor.{Actor, ActorLogging, ActorRef}
+import kasimo.GraphNetwork.Node
 import kasimo.actors.InterSectionActor._
 import kasimo.simulation.TickScheduler.{RenderTick, SimTick}
 
-import scala.util.Random
 
 /**
   * Created by info on 04.11.2016.
   */
-class InterSectionActor(id: String, stateKeeper: ActorRef) extends Actor with ActorLogging {
+class InterSectionActor(id: String, node: Node, stateKeeper: ActorRef) extends Actor with ActorLogging {
 
-  case class RelativeCarPosition(nextInterSection: ActorRef, car: ActorRef, var done: Float)
+  case class RelativeCarPosition(nextInterSection: ActorRef, car: ActorRef, var done: Float, speed: Float)
 
   var carCapacity: Option[ActorRef] = None
   var outgoingRoads = List[ActorRef]()
@@ -20,9 +20,9 @@ class InterSectionActor(id: String, stateKeeper: ActorRef) extends Actor with Ac
 
   def receive: Receive = {
 
-    case DriveIntoStreetRequest(nextInterSection) =>
+    case DriveIntoStreetRequest(nextInterSection, speed) =>
       carCapacity = None
-      carPositions ::= RelativeCarPosition(nextInterSection, sender(), 0)
+      carPositions ::= RelativeCarPosition(nextInterSection, sender(), 0, speed)
 
     case PossibleTarget(possibleTargetRef) =>
       outgoingRoads ::= possibleTargetRef
@@ -30,7 +30,7 @@ class InterSectionActor(id: String, stateKeeper: ActorRef) extends Actor with Ac
     case DriveInRequest(car) =>
       carCapacity match {
         case Some(x) =>
-          // ignore full!
+        // ignore full!
         case None =>
           carCapacity = Some(car)
           sender ! DriveInSuccess(car)
@@ -44,7 +44,19 @@ class InterSectionActor(id: String, stateKeeper: ActorRef) extends Actor with Ac
 
     case SimTick() =>
       // transport tick
-      carPositions.filter(_.done < 1).foreach(_.done += 0.0025f + Random.nextFloat()/1000)
+      val stillDriving = carPositions.filter(_.done < 1)
+      stillDriving.foreach(x => {
+        // search for cars bigger than own position
+        def carInFront(myPos: Float)(car: RelativeCarPosition): Boolean = {
+          val otherPos = car.done
+          myPos < otherPos && (myPos + 0.03) >= otherPos
+        }
+
+        if (!carPositions.exists(carInFront(x.done))) {
+          x.done += x.speed
+        }
+      })
+
       // some are finished
       val done = carPositions.filter(_.done >= 1)
       // request one drive into the intersection
@@ -55,7 +67,7 @@ class InterSectionActor(id: String, stateKeeper: ActorRef) extends Actor with Ac
         val carPos = carPositions.filter(_.nextInterSection == x).map(z =>s"""{"carId": "${z.car.path.name}","pos": ${z.done}}""").mkString(",")
         s"""{"edgeId": "${self.path.name}${x.path.name}","from":"${self.path.name}","to":"${x.path.name}","carPositions": [$carPos]}"""
       }).mkString(",")
-      stateKeeper ! s"""{"nodeId": "${self.path.name}","edges": [$roadString]}"""
+      stateKeeper ! s"""{"nodeId": "${self.path.name}","type":"${node.nodeTypes}","pos":{"x":${node.position.x},"y":${node.position.y}},"edges": [$roadString]}"""
 
     case x => //println(x)
 
@@ -64,7 +76,7 @@ class InterSectionActor(id: String, stateKeeper: ActorRef) extends Actor with Ac
 
 object InterSectionActor {
 
-  case class DriveIntoStreetRequest(street: ActorRef)
+  case class DriveIntoStreetRequest(street: ActorRef, speed: Float)
 
   case class DriveInSuccess(car: ActorRef)
 

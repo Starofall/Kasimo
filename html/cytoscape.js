@@ -17398,8 +17398,8 @@
                                 y: from.y + vector.y * pos
                             };
                             var end = {
-                                x: start.x + vector.x * (0.05),
-                                y: start.y + vector.y * (0.05)
+                                x: start.x + vector.x * (0.05/2),
+                                y: start.y + vector.y * (0.05/2)
                             };
                             context.moveTo(start.x, start.y);
                             context.lineTo(end.x, end.y);
